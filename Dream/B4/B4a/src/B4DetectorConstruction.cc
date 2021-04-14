@@ -98,18 +98,18 @@ void B4DetectorConstruction::DefineMaterials()
 { 
   // Copper material defined using NIST Manager
   // I use Cu as default absorber material but you can switch to lead
-  //G4NistManager* CunistManager = G4NistManager::Instance();
-  //CunistManager->FindOrBuildMaterial("G4_Cu");
+  G4NistManager* CunistManager = G4NistManager::Instance();
+  CunistManager->FindOrBuildMaterial("G4_Cu");
   
-  //G4NistManager* FenistManager = G4NistManager::Instance();
-  //FenistManager->FindOrBuildMaterial("G4_Fe");
+  G4NistManager* FenistManager = G4NistManager::Instance();
+  FenistManager->FindOrBuildMaterial("G4_Fe");
 
   //G4NistManager* WnistManager = G4NistManager::Instance();
   //WnistManager->FindOrBuildMaterial("G4_W");
 
   // Lead material defined using NIST Manager
-   G4NistManager* PbnistManager = G4NistManager::Instance();
-   PbnistManager->FindOrBuildMaterial("G4_Cu");
+  //G4NistManager* PbnistManager = G4NistManager::Instance();
+  //PbnistManager->FindOrBuildMaterial("G4_Pb");
 
   // Platinum material defined using NIST Manager
   // G4NistManager* PtnistManager = G4NistManager::Instance();
@@ -118,6 +118,10 @@ void B4DetectorConstruction::DefineMaterials()
   // Alluminium material defined using NIST Manager
   // G4NistManager* AlnistManager = G4NistManager::Instance();
   // AlnistManager->FindOrBuildMaterial("G4_Al");
+  
+  // Stainless-steel material defined using NIST Manager
+   G4NistManager* SsnistManager = G4NistManager::Instance();
+   SsnistManager->FindOrBuildMaterial("G4_STAINLESS-STEEL");
 
   // Polystyrene material defined using NIST Manager
   // I use this material for the core of plastic scintillating fibers
@@ -131,7 +135,7 @@ void B4DetectorConstruction::DefineMaterials()
   
   // create elements
   a = 1.01*g/mole;
-  G4Element* elH  = new G4Element(name="Hydrogen",symbol="H" , z= 1., a); //Hidrogen
+  G4Element* elH  = new G4Element(name="Hydrogen",symbol="H" , z= 1., a); //Hydrogen
 
   a = 12.01*g/mole;
   G4Element* elC  = new G4Element(name="Carbon"  ,symbol="C" , z= 6., a); //Carbon
@@ -151,6 +155,24 @@ void B4DetectorConstruction::DefineMaterials()
   a = 65.38*g/mole;
   G4Element* elZn = new G4Element("Zinc", symbol="Zn", z=30., a); //Zinc
   
+  // Creating some more elements
+  a = 58.70*g/mole;
+  G4Element* elNi = new G4Element("Nickel", symbol="Ni", z=28., a); //Nickel
+
+  a = 51.996*g/mole;
+  G4Element* elCr = new G4Element("Chromium", symbol="Cr", z=24., a); //Chromium
+
+  a = 55.847*g/mole;
+  G4Element* elFe = new G4Element("Iron", symbol="Fe", z=26., a); //Iron
+
+  // create Inconel718
+  double denInconel = 8.2*g/cm3;
+  int nofelementsInconel = 3;
+  G4Material* Inconel718 = new G4Material("Inconel", denInconel, nofelementsInconel);
+  Inconel718 -> AddElement(elNi, 50*perCent);
+  Inconel718 -> AddElement(elFe, 33*perCent);
+  Inconel718 -> AddElement(elCr, 17*perCent);
+
   // create PMMA
   G4Material* PMMA = new G4Material("PMMA", 1.19*g/cm3, 3); //name, density and number of elements
   PMMA -> AddElement(elC, 5);
@@ -213,12 +235,19 @@ G4VPhysicalVolume* B4DetectorConstruction::DefineVolumes()
   G4int NofFibers = 16*20; // 32 of each type
   G4int NofScinFibers = NofFibers/2;
   G4int NofCherFibers = NofFibers/2;
-  G4int NofFibersrow = 3*16;
-  G4int NofFiberscolumn = 60;
+  //G4int NofFibersrow = 3*16;
+  //G4int NofFiberscolumn = 60;
+  G4int noffibersrow = 16;
+  G4int noffiberscolumn = 20
   G4double moduleZ = (1000.)*mm;
-  double tolerance = 0.05*mm;
+  double tolerance = 0.0*mm; // I(Jin) change from 0.05*mm to 0.0*mm
   G4double moduleX = 3*32.*mm+1*mm+2*tolerance*NofFibersrow; 
   G4double moduleY = 59*(1.733+2*tolerance)*mm+2.0*mm;
+  // Parameters for towers
+  G4int noftowers = 3;
+  G4double towerequippedX = moduleX/3;
+  G4double towerequippedY = moduleY/3;
+  G4double towerequippedZ = moduleZ + SiPMZ;
 
   // Geometry parameters of the world, world is a box
   G4double worldX = 200 * moduleX;
@@ -265,7 +294,7 @@ G4VPhysicalVolume* B4DetectorConstruction::DefineVolumes()
 
   // Get materials for vacuum, absorber, scintillating and cherenkov fibers, SiPM
   G4Material* defaultMaterial = G4Material::GetMaterial("G4_AIR"); // G4_AIR or G4_Galactic 
-  G4Material* absorberMaterial = G4Material::GetMaterial("G4_Cu"); // or Brass or G4_Cu or G4_Pb
+  G4Material* absorberMaterial = G4Material::GetMaterial("Brass"); // or Brass or G4_Cu or G4_Pb or G4_STAINLESS-STEEL
   G4Material* ScinMaterial = G4Material::GetMaterial("Polystyrene");
   G4Material* CherMaterial = G4Material::GetMaterial("PMMA");
   G4Material* GlassMaterial = G4Material::GetMaterial("Glass");
@@ -496,7 +525,7 @@ G4VPhysicalVolume* B4DetectorConstruction::DefineVolumes()
                         0,                // copy number
                         fCheckOverlaps);  // checking overlaps
    
-   // Here I build the module equipped with SiPM
+   /*// Here I build the module equipped with SiPM
 
    G4VSolid* moduleequippedS
     = new G4Box("moduleequipped",                                          // its name
@@ -507,8 +536,11 @@ G4VPhysicalVolume* B4DetectorConstruction::DefineVolumes()
                  moduleequippedS,           // its solid
                  defaultMaterial,           // its material
                  "moduleequipped");         // its name
-
-  // Here I build the calorimeter itself. As calorimeter I mean the matrix of
+ */
+    //Towers with SiPMs
+    G4VSolid* towerequippedS = new G4Box("Towerequipped", towerequippedX/2, towerequippedY/2, towerequippedZ/2);
+    G4LogicalVolume* towerequippedLV = new G4LogicalVolume(towerequippedS, defaultMaterial, "Towerequipped");
+  /*// Here I build the calorimeter itself. As calorimeter I mean the matrix of
   // modules equipped. Uncomment it only if you want more than one module.
   
     G4VSolid* CalorimeterS 
@@ -546,27 +578,54 @@ G4VPhysicalVolume* B4DetectorConstruction::DefineVolumes()
                                                         copynumbermodule); 
       };
    }; 
- 
+  */
+   //Calorimeter
+    G4VSolid* calorimeterS = new G4Box("Calorimeter", towerequippedX*noftowers/2, towerequippedY*noftowers/2, towerequippedZ/2);
+    G4LogicalVolume* calorimeterLV = new G4LogicalVolume(calorimeterS, defaultMaterial, "Calorimeter");
+
+    G4int copynumbertower = 0;
+    G4double t_x;
+    G4double t_y;
+    G4ThreeVector vec_towerequipped;
+
+   //Placement of Towers with SiPMs	
+   G4VPhysicalVolume* towerequippedPV[noftowers][noftowers];
+   	for(int x=0; x<noftowers; x++){
+		for(int y=0; y<noftowers; y++){
+			t_x = -3*towerequippedX/2 + towerequippedX*x + towerequippedX/2;
+			t_y = -3*towerequippedY/2 + towerequippedY*y + towerequippedY/2;
+           
+			vec_towerequipped.setX(t_x);
+			vec_towerequipped.setY(t_y);
+			vec_towerequipped.setZ(0.);
+        
+			copynumbertower = (1+x)+(y*noftowers);
+
+			towerequippedPV[x][y] = new G4PVPlacement(0, vec_towerequipped, towerequippedLV, "Towerequipped", calorimeterLV, false, copynumbertower);
+      		};
+	}; 
   // Here I place and rotate the entire calorimeter
   G4RotationMatrix rotm  = G4RotationMatrix();
-  rotm.rotateY(1.0*deg);  // Set the rotation angles //0.75
-  rotm.rotateX(1.0*deg);  //0.75
+  rotm.rotateY(2.5*deg);  // Set the rotation angles //0.75 //originally set to 1.0*deg
+  rotm.rotateX(1.0*deg);  //0.75 //originally set to 1.0*deg //TB->X fixed
   G4ThreeVector position;
   position.setX(0.);
   position.setY(0.);
   position.setZ(0.);
   G4Transform3D transform = G4Transform3D(rotm,position); 
 
-  G4VPhysicalVolume* CalorimeterPV = new G4PVPlacement(
+  //G4VPhysicalVolume* CalorimeterPV = new G4PVPlacement(
+  G4VPhysicalVolume* calorimeterPV = new G4PVPlacement(
                                                 transform,        // its position and rotation
-                                                CalorimeterLV,    // its logical volume                         
+                                                //CalorimeterLV,    // its logical volume                         
+						calorimeterLV,
                                                 "Calorimeter",    // its name
                                                 worldLV,          // its mother  volume
                                                 false,            // no boolean operation
                                                 0,                // copy number
                                                 fCheckOverlaps);  // checking overlaps 
 
-  // Here I build the module: to do that I build the rectangular absorber
+  /*// Here I build the module: to do that I build the rectangular absorber
   // I will later put fibers into it  
   G4VSolid* moduleS
     = new G4Box("module",                          // its name
@@ -592,8 +651,16 @@ G4VPhysicalVolume* B4DetectorConstruction::DefineVolumes()
                                                 false,            // no boolean operation
                                                 0,                // copy number
                                                 fCheckOverlaps);  // checking overlaps 
+*/
+    //Tower - rectangular absorber
+    G4VSolid* towerS = G4Box("Tower", towerequippedX/2, towerequippedY/2, towerequippedZ/2);
+    G4LogicalVolume* towerLV = new G4LogicalVolume(towerS, defaultMaterial, "Tower");
 
-
+    G4ThreeVector vec_tower;
+    vec_tower.setX(0.);
+    vec_tower.setY(0.);
+    vec_tower.setZ(-0.18);
+    G4VPhysicalVolume* towerPV = new G4PVPlacement(0, vec_tower, towerLV, "Tower", towerequippedLV, false, 0, fCheckOverlaps);
   // Here I define the Optical Surface PROPRIETIES between the glass and the Si of the SiPM
   G4OpticalSurface* OpSurfaceGlassSi = new G4OpticalSurface("OpSurfaceGlassSi");
   
@@ -692,35 +759,43 @@ G4VPhysicalVolume* B4DetectorConstruction::DefineVolumes()
   // Here I place the Scintillating fibers and the SiPM next to them
   // Attention: I place an optical surface painted (blacked) from the moduleequippedPV 
   // to the SiPMPV, in so doing I completly avoid any cross talk between SiPMs
- 
-  G4VPhysicalVolume* physi_S_fiber[NofFibersrow][NofFiberscolumn];
-  G4VPhysicalVolume* physi_SiPM[NofFibersrow][NofFiberscolumn];  
-  G4LogicalBorderSurface* logic_OpSurface_defaultAir[NofFibersrow][NofFiberscolumn];
+    //Fibers
+    G4int copynumberfiber = 0;
+    G4VPhysicalVolume* SiPM_PV[noffibersrow][noffiberscolumn];  
+    G4LogicalBorderSurface* logic_OpSurface_defaultAir[noffibersrow][noffiberscolumn];
+  //G4VPhysicalVolume* physi_S_fiber[NofFibersrow][NofFiberscolumn];
+  //G4VPhysicalVolume* physi_SiPM[NofFibersrow][NofFiberscolumn];  
+    G4LogicalBorderSurface* logic_OpSurface_defaultAir[NofFibersrow][NofFiberscolumn];
 
-  G4int copynumber=0;
-
-  for(int row=0; row<NofFibersrow; row++){
-     std::stringstream S_fiber_row;
-     S_fiber_row.str("");
-     S_fiber_row << row;
-     for(int column=0; column<NofFiberscolumn; column++){
-        std::stringstream S_fiber_column;
-        S_fiber_column.str("");
-        S_fiber_column << column;
-        std::string S_name;
-        std::string SiPM_name;
-        S_name = "S_row" + S_fiber_row.str() + "_column_" + S_fiber_column.str(); 
-        SiPM_name = "SiPMS_row" + S_fiber_row.str() + "_column_" + S_fiber_column.str();
+  //G4int copynumber=0;
+    //S Fibers
+    G4VPhysicalVolume* S_fiber_PV[noffibersrow][noffiberscolumn];
+  //for(int row=0; row<NofFibersrow; row++){
+	for(int row=0; row<noffibersrow; row++){
+		std::stringstream S_fiber_row;
+		S_fiber_row.str("");
+		S_fiber_row << row;
+     //for(int column=0; column<NofFiberscolumn; column++){
+		for(int column=0; column<noffiberscolumn; column++){
+        		std::stringstream S_fiber_column;
+        		S_fiber_column.str("");
+        		S_fiber_column << column;
+        		std::string S_name;
+        		std::string SiPM_name;
+        		S_name = "S_row" + S_fiber_row.str() + "_column_" + S_fiber_column.str(); 
+        		SiPM_name = "SiPMS_row" + S_fiber_row.str() + "_column_" + S_fiber_column.str();
 
         // I need to specify the position of each scintillating fiber before placing them
-        G4double S_x, S_y, S_z;
-        G4ThreeVector vec_S_fiber;
-        G4ThreeVector vec_SiPM;
+        		G4double S_x, S_y, S_z;
+        		G4ThreeVector vec_S_fiber;
+        		G4ThreeVector vec_SiPM;
 
-          if(column%2==0){
-            S_x = -moduleX/2 + tuberadius + (tuberadius*2+2*tolerance)*row;
-            S_y = -moduleY/2 + tuberadius + (1.733+2*tolerance*mm)*(column);
-            
+        if(column%2==0){
+            //S_x = -moduleX/2 + tuberadius + (tuberadius*2+2*tolerance)*row;
+            //S_y = -moduleY/2 + tuberadius + (1.733+2*tolerance*mm)*(column);
+	    S_x = -towerequippedX/2 + tuberadius + (tuberadius*2+2*tolerance)*row;
+	    S_y = -towerequippedY/2 + tuberadius + (1.733+2*tolerance)*(column);
+
             vec_S_fiber.setX(S_x);
             vec_S_fiber.setY(S_y);
             vec_S_fiber.setZ(0.);
@@ -729,11 +804,11 @@ G4VPhysicalVolume* B4DetectorConstruction::DefineVolumes()
             vec_SiPM.setY(S_y);
             vec_SiPM.setZ(fiberZ/2+SiPMZ/2-0.18);
             
-            copynumber = (NofFiberscolumn*row+column);
-
+            //copynumber = (NofFiberscolumn*row+column);
+	    copynumberfiber = (noffiberscolumn*row + column);
 
             auto logic_S_fiber = constructscinfiber(tolerance,tuberadius,fiberZ,absorberMaterial,coreradius,coreZ,ScinMaterial,claddingradiusmin,claddingradiusmax,claddingZ,CherMaterial);
-            // I need to place the scintillating fibers
+            /*// I need to place the scintillating fibers
             physi_S_fiber[row][column] = new G4PVPlacement(0,
                                                          vec_S_fiber,     //its position
                                                          logic_S_fiber,   //its logical volume
@@ -749,28 +824,50 @@ G4VPhysicalVolume* B4DetectorConstruction::DefineVolumes()
                                                         SiPM_name,                    //its name
                                                         moduleequippedLV,                      //its mother
                                                         false,                        //no boulean operat
-                                                        0); 
-          logic_OpSurface_defaultAir[NofFibersrow][NofFiberscolumn] = new G4LogicalBorderSurface("logic_OpSurface_defaultAir", CalorimeterPV, 
-            physi_SiPM[row][column], OpSurfacedefault);
+                                                        0);*/ 
+	    //Placement of S fibers
+	    S_fiber_PV[row][column] = new G4PVPlacement(0,
+                                                         vec_S_fiber,     //position
+                                                         logic_S_fiber,   //its LV
+                                                         S_name,          //its name
+                                                         towerLV,        //mother's LV
+                                                         false,
+                                                         copynumberfiber);
+
+	    //Placement of SiPMs
+	    SiPM_PV[row][column] = new G4PVPlacement(0,
+                                                        vec_SiPM,           //position
+                                                        SiPMLV,             //its LV
+                                                        SiPM_name,          //its name
+                                                        towerequippedLV,    //its mother's LV
+                                                        false,
+                                                        0)
+          //logic_OpSurface_defaultAir[NofFibersrow][NofFiberscolumn] = new G4LogicalBorderSurface("logic_OpSurface_defaultAir", CalorimeterPV, 
+            //physi_SiPM[row][column], OpSurfacedefault);
+	   logic_OpSurface_defaultAir[noffibersrow][noffiberscolumn] = new G4LogicalBorderSurface("logic_OpSurface_defaultAir", towerequippedPV, 
+            SiPM_PV[row][column], OpSurfacedefault);
           }
      };
   };
 
   // Here I place the Cherenkov fibers
-  G4VPhysicalVolume* physi_C_fiber[NofFibersrow][NofFiberscolumn];
-  
-  for(int row=0; row<NofFibersrow; row++){
-     std::stringstream C_fiber_row;
-     C_fiber_row.str("");
-     C_fiber_row << row;
-     for(int column=0; column<NofFiberscolumn; column++){
-        std::stringstream C_fiber_column;
-        C_fiber_column.str("");
-        C_fiber_column << column;
-        std::string C_name;
-        std::string SiPM_name;
-        C_name = "C_row" + C_fiber_row.str() + "_column_" + C_fiber_column.str(); 
-        SiPM_name = "SiPMC_row" + C_fiber_row.str() + "_column_" + C_fiber_column.str();
+  //G4VPhysicalVolume* physi_C_fiber[NofFibersrow][NofFiberscolumn];
+  //C Fibers
+	G4VPhysicalVolume* C_fiber_PV[noffibersrow][noffiberscolumn];
+  //for(int row=0; row<NofFibersrow; row++){
+	for(int row=0; row<noffibersrow; row++){
+     		std::stringstream C_fiber_row;
+		C_fiber_row.str("");
+		C_fiber_row << row;
+     //for(int column=0; column<NofFiberscolumn; column++){
+	    for(int column=0; column<noffiberscolumn; column++){
+		std::stringstream C_fiber_column;
+		C_fiber_column.str("");
+		C_fiber_column << column;
+		std::string C_name;
+		std::string SiPM_name;
+		C_name = "C_row" + C_fiber_row.str() + "_column_" + C_fiber_column.str(); 
+		SiPM_name = "SiPMC_row" + C_fiber_row.str() + "_column_" + C_fiber_column.str();
 
         // I need to specify the position of each cherenkov fiber
         G4double C_x, C_y, C_z;
@@ -778,9 +875,11 @@ G4VPhysicalVolume* B4DetectorConstruction::DefineVolumes()
         G4ThreeVector vec_SiPM;
 
         if(column%2 != 0){
-            C_x = -moduleX/2 + tuberadius + tuberadius + (tuberadius*2+2*tolerance)*row;
-            C_y = -moduleY/2 + tuberadius + (1.733+2*tolerance*mm)*column;
-         
+            //C_x = -moduleX/2 + tuberadius + tuberadius + (tuberadius*2+2*tolerance)*row;
+            //C_y = -moduleY/2 + tuberadius + (1.733+2*tolerance*mm)*column;
+	    C_x = -towerequippedX/2 + tuberadius + tuberadius + (tuberadius*2+2*tolerance)*row;
+	    C_y = -towerequippedY/2 + tuberadius + (1.733+2*tolerance)*(column);
+      
             vec_C_fiber.setX(C_x);
             vec_C_fiber.setY(C_y);
             vec_C_fiber.setZ(0.);
@@ -790,10 +889,11 @@ G4VPhysicalVolume* B4DetectorConstruction::DefineVolumes()
             vec_SiPM.setZ(fiberZ/2+SiPMZ/2-0.18);
 
             std::cout<< row << " " << column << std::endl;
-             copynumber = (NofFiberscolumn*row+column);
+             //copynumber = (NofFiberscolumn*row+column);
+	    copynumberfiber = (noffiberscolumn*row + column);
                         
             auto logic_C_fiber = constructcherfiber(tolerance,tuberadius,fiberZ,absorberMaterial,coreradius,coreZ,CherMaterial,claddingradiusmin,claddingradiusmax,claddingZ,CladCherMaterial);
-            // I need to place the cherenkov fibers
+           /* // I need to place the cherenkov fibers
            physi_C_fiber[row][column] = new G4PVPlacement(0,
                                                          vec_C_fiber,      //its position
                                                          logic_C_fiber,    //its logical volume
@@ -809,9 +909,28 @@ G4VPhysicalVolume* B4DetectorConstruction::DefineVolumes()
                                                         SiPM_name,           //its name
                                                         moduleequippedLV,    //its mother
                                                         false,               //no boulean operat
-                                                        0); 
-             logic_OpSurface_defaultAir[NofFibersrow][NofFiberscolumn] = new G4LogicalBorderSurface("logic_OpSurface_defaultAir", CalorimeterPV, 
-             physi_SiPM[row][column], OpSurfacedefault);
+                                                        0);*/
+	    //Placement of C fibers
+	    C_fiber_PV[row][column] = new G4PVPlacement(0,
+                                                         vec_C_fiber,     //position
+                                                         logic_C_fiber,   //its LV
+                                                         S_name,          //its name
+                                                         towerLV,        //mother's LV
+                                                         false,
+                                                         copynumberfiber);
+
+	    //Placement of SiPMs
+	    SiPM_PV[row][column] = new G4PVPlacement(0,
+                                                        vec_SiPM,           //position
+                                                        SiPMLV,             //its LV
+                                                        SiPM_name,          //its name
+                                                        towerequippedLV,    //mother's LV
+                                                        false,
+                                                        0);
+             //logic_OpSurface_defaultAir[NofFibersrow][NofFiberscolumn] = new G4LogicalBorderSurface("logic_OpSurface_defaultAir", CalorimeterPV,
+             //physi_SiPM[row][column], OpSurfacedefault);
+	     logic_OpSurface_defaultAir[noffibersrow][noffiberscolumn] = new G4LogicalBorderSurface("logic_OpSurface_defaultAir", towerequippedPV,
+            SiPM_PV[row][column], OpSurfacedefault);
           }      
      };
   };
