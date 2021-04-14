@@ -238,16 +238,14 @@ G4VPhysicalVolume* B4DetectorConstruction::DefineVolumes()
   //G4int NofFibersrow = 3*16;
   //G4int NofFiberscolumn = 60;
   G4int noffibersrow = 16;
-  G4int noffiberscolumn = 20
-  G4double moduleZ = (1000.)*mm;
-  double tolerance = 0.0*mm; // I(Jin) change from 0.05*mm to 0.0*mm
-  G4double moduleX = 3*32.*mm+1*mm+2*tolerance*NofFibersrow; 
+  G4int noffiberscolumn = 20;
+  //G4int nofallfibersrow = 3*noffibersrow;
+  //G4int nofallfiberscolumn = 3*noffiberscolumn;
+  //G4double moduleZ = (1000.)*mm;
+  double tolerance = 0.0*mm; // Changed from 0.05*mm to 0.0*mm
+  G4double moduleX = 3*32.*mm+1*mm+2*tolerance*noffibersrow*3;
   G4double moduleY = 59*(1.733+2*tolerance)*mm+2.0*mm;
-  // Parameters for towers
-  G4int noftowers = 3;
-  G4double towerequippedX = moduleX/3;
-  G4double towerequippedY = moduleY/3;
-  G4double towerequippedZ = moduleZ + SiPMZ;
+  G4double moduleZ = (1000.)*mm;
 
   // Geometry parameters of the world, world is a box
   G4double worldX = 200 * moduleX;
@@ -285,6 +283,12 @@ G4VPhysicalVolume* B4DetectorConstruction::DefineVolumes()
   G4double AbsorberX = 1000.*mm;
   G4double AbsorberY = 1000.*mm;
   G4double AbsorberRadLen = 56.12 *mm;  
+  
+ // Parameters for towers
+  G4int noftowers = 3;
+  G4double towerequippedX = moduleX/3;
+  G4double towerequippedY = moduleY/3;
+  G4double towerequippedZ = moduleZ + SiPMZ;
 
   // Geometry parameters of the module equipped with SiPM
   // I build it so I can replicate the entire module + SiPM 
@@ -653,7 +657,7 @@ G4VPhysicalVolume* B4DetectorConstruction::DefineVolumes()
                                                 fCheckOverlaps);  // checking overlaps 
 */
     //Tower - rectangular absorber
-    G4VSolid* towerS = G4Box("Tower", towerequippedX/2, towerequippedY/2, towerequippedZ/2);
+    G4VSolid* towerS = new G4Box("Tower", towerequippedX/2, towerequippedY/2, towerequippedZ/2);
     G4LogicalVolume* towerLV = new G4LogicalVolume(towerS, defaultMaterial, "Tower");
 
     G4ThreeVector vec_tower;
@@ -765,7 +769,7 @@ G4VPhysicalVolume* B4DetectorConstruction::DefineVolumes()
     G4LogicalBorderSurface* logic_OpSurface_defaultAir[noffibersrow][noffiberscolumn];
   //G4VPhysicalVolume* physi_S_fiber[NofFibersrow][NofFiberscolumn];
   //G4VPhysicalVolume* physi_SiPM[NofFibersrow][NofFiberscolumn];  
-    G4LogicalBorderSurface* logic_OpSurface_defaultAir[NofFibersrow][NofFiberscolumn];
+  //G4LogicalBorderSurface* logic_OpSurface_defaultAir[NofFibersrow][NofFiberscolumn];
 
   //G4int copynumber=0;
     //S Fibers
@@ -841,7 +845,7 @@ G4VPhysicalVolume* B4DetectorConstruction::DefineVolumes()
                                                         SiPM_name,          //its name
                                                         towerequippedLV,    //its mother's LV
                                                         false,
-                                                        0)
+                                                        0);
           //logic_OpSurface_defaultAir[NofFibersrow][NofFiberscolumn] = new G4LogicalBorderSurface("logic_OpSurface_defaultAir", CalorimeterPV, 
             //physi_SiPM[row][column], OpSurfacedefault);
 	   logic_OpSurface_defaultAir[noffibersrow][noffiberscolumn] = new G4LogicalBorderSurface("logic_OpSurface_defaultAir", towerequippedPV, 
@@ -914,7 +918,7 @@ G4VPhysicalVolume* B4DetectorConstruction::DefineVolumes()
 	    C_fiber_PV[row][column] = new G4PVPlacement(0,
                                                          vec_C_fiber,     //position
                                                          logic_C_fiber,   //its LV
-                                                         S_name,          //its name
+                                                         C_name,          //its name
                                                          towerLV,        //mother's LV
                                                          false,
                                                          copynumberfiber);
@@ -929,8 +933,7 @@ G4VPhysicalVolume* B4DetectorConstruction::DefineVolumes()
                                                         0);
              //logic_OpSurface_defaultAir[NofFibersrow][NofFiberscolumn] = new G4LogicalBorderSurface("logic_OpSurface_defaultAir", CalorimeterPV,
              //physi_SiPM[row][column], OpSurfacedefault);
-	     logic_OpSurface_defaultAir[noffibersrow][noffiberscolumn] = new G4LogicalBorderSurface("logic_OpSurface_defaultAir", towerequippedPV,
-            SiPM_PV[row][column], OpSurfacedefault);
+	     logic_OpSurface_defaultAir[noffibersrow][noffiberscolumn] = new G4LogicalBorderSurface("logic_OpSurface_defaultAir", towerequippedPV, SiPM_PV[row][column], OpSurfacedefault);
           }      
      };
   };
