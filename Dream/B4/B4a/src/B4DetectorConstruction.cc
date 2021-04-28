@@ -848,8 +848,7 @@ G4VPhysicalVolume* B4DetectorConstruction::DefineVolumes()
                                                         0);
           //logic_OpSurface_defaultAir[NofFibersrow][NofFiberscolumn] = new G4LogicalBorderSurface("logic_OpSurface_defaultAir", CalorimeterPV, 
             //physi_SiPM[row][column], OpSurfacedefault);
-	   logic_OpSurface_defaultAir[noffibersrow][noffiberscolumn] = new G4LogicalBorderSurface("logic_OpSurface_defaultAir", towerequippedPV, 
-            SiPM_PV[row][column], OpSurfacedefault);
+	   logic_OpSurface_defaultAir[noffibersrow][noffiberscolumn] = new G4LogicalBorderSurface("logic_OpSurface_defaultAir", towerPV, SiPM_PV[row][column], OpSurfacedefault);
           }
      };
   };
@@ -933,7 +932,7 @@ G4VPhysicalVolume* B4DetectorConstruction::DefineVolumes()
                                                         0);
              //logic_OpSurface_defaultAir[NofFibersrow][NofFiberscolumn] = new G4LogicalBorderSurface("logic_OpSurface_defaultAir", CalorimeterPV,
              //physi_SiPM[row][column], OpSurfacedefault);
-	     logic_OpSurface_defaultAir[noffibersrow][noffiberscolumn] = new G4LogicalBorderSurface("logic_OpSurface_defaultAir", towerequippedPV, SiPM_PV[row][column], OpSurfacedefault);
+	     logic_OpSurface_defaultAir[noffibersrow][noffiberscolumn] = new G4LogicalBorderSurface("logic_OpSurface_defaultAir", towerPV, SiPM_PV[row][column], OpSurfacedefault);
           }      
      };
   };
