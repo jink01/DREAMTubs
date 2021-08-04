@@ -62,18 +62,28 @@ class B4aEventAction : public G4UserEventAction
     void AddEscapedEnergy(G4double escapedenergy);
 
     //to save vectors in ntuple
-    std::vector<G4double>& GetVectorSignals() {return VectorSignals;} 
+    std::vector<G4double>& GetVectorSignals() {return VectorSignals;}
     std::vector<G4double>& GetVectorSignalsCher() {return VectorSignalsCher;}
+    std::vector<G4double>& GetVectorDepositedEnergy() {return VectorDepositedEnergy;}
+    std::vector<G4double>& GetVectorDepositedEScin() {return VectorDepositedEScin;}
+    std::vector<G4double>& GetVectorDepositedECher() {return VectorDepositedECher;}
+    //std::vector<G4double>& GetVectorSignals() {return VectorSignals[];}
+    //std::vector<G4double>& GetVectorSignalsCher() {return VectorSignalsCher[];}
 
     //to fill vectors
-    void AddVectorScinEnergy(G4double de, G4int fiber); //fill vector of scintillating fibers with energy deposition
-    void AddVectorCherPE(G4int fiber, G4int n);//fill vector of cherenkov fibers with chernekov photoelectrons
+    //void AddVectorScinEnergy(G4double de, G4int fiber); //fill vector of scintillating fibers with energy deposition
+    //void AddVectorCherPE(G4int fiber, G4int n);//fill vector of cherenkov fibers with chernekov photoelectrons
+    void AddVectorScinEnergy(G4double de, G4int tower, G4int fiber);
+    void AddVectorCherPE(G4int tower, G4int fiber, G4int n);
+    void AddVectorDepositedEnergy(G4double e, G4int tower);
+    void AddVectorDepositedEScin(G4double e, G4int tower);
+    void AddVectorDepositedECher(G4double e, G4int tower);
     
   private:
-    G4double  Energyem; //Energy of em component
+    G4double Energyem; //Energy of em component
     G4double Energyem2; //Energy of em component (different estimation)
-    G4double  EnergyScin; //Energy in scintillating fibers
-    G4double  EnergyCher; //Energy in Cherenkov fibers
+    G4double EnergyScin; //Energy in scintillating fibers
+    G4double EnergyCher; //Energy in Cherenkov fibers
     G4int     NofCherenkovDetected; //Number of Cherenkov photons detected (in cherenkov fibers)
     //G4int     NofScintillationDetected;//Number of Scintillating photons detected (in scintillating fibers)
     G4double  EnergyTot;//Total energy deposited (does not count invisibile energy)
@@ -85,6 +95,13 @@ class B4aEventAction : public G4UserEventAction
 
     std::vector<G4double> VectorSignals;//Vector filled with scintillating fibers energy deposits
     std::vector<G4double> VectorSignalsCher;//Vector filled with Cherenkov fibers Cherenkov photoelectrons
+
+    std::vector<G4double> VectorDepositedEnergy; //Vector of total energy deposited tower by tower
+    std::vector<G4double> VectorDepositedEScin; //Vector of deposited energy in S fibers - tower by tower
+    std::vector<G4double> VectorDepositedECher; //Vector of deposited energy in C fibers - tower by tower
+
+    //std::vector<std::vector<G4double>> VectorSignals;
+    //std::vector<std::vector<G4double>> VectorSignalsCher;
 };
 
 // inline functions
@@ -105,14 +122,18 @@ inline void B4aEventAction::SavePrimaryEnergy(G4double primaryparticleenergy){
   PrimaryParticleEnergy = primaryparticleenergy;
 }
 
-inline void B4aEventAction::AddVectorScinEnergy(G4double de, G4int fiber) {
+/*inline void B4aEventAction::AddVectorScinEnergy(G4double de, G4int fiber) {
     VectorSignals.at(fiber) += de;
+}*/
+inline void B4aEventAction::AddVectorScinEnergy(G4double de, G4int tower, G4int fiber) {
+    VectorSignals.at(320*(tower-1)+fiber) += de;
 }
-
-inline void B4aEventAction::AddVectorCherPE(G4int fiber, G4int n) {
+/*inline void B4aEventAction::AddVectorCherPE(G4int fiber, G4int n) {
     VectorSignalsCher.at(fiber) = VectorSignalsCher.at(fiber) + n;
+}*/
+inline void B4aEventAction::AddVectorCherPE(G4int tower, G4int fiber, G4int n) {
+    VectorSignalsCher.at(320*(tower-1)+fiber) = VectorSignalsCher.at(320*(tower-1)+fiber) + n;
 }
-
 inline void B4aEventAction::Addem(G4double de) {
   Energyem += de; 
 }
@@ -140,6 +161,15 @@ inline void B4aEventAction::AddCherenkov(G4int n){
 inline void B4aEventAction::Addenergy(G4double de){
   EnergyTot += de;
 }
+inline void B4aEventAction::AddVectorDepositedEnergy(G4double e, G4int tower){
+  VectorDepositedEnergy.at(tower-1) += e;
+}
+inline void B4aEventAction::AddVectorDepositedEScin(G4double e, G4int tower){
+  VectorDepositedEScin.at(tower-1) += e;
+}
+inline void B4aEventAction::AddVectorDepositedECher(G4double e, G4int tower){
+  VectorDepositedECher.at(tower-1) += e;
+}
 
 /*inline void B4aEventAction::AddEnergyfibre(G4double de, G4int number){
     Signalfibre[number] += de;
@@ -151,6 +181,4 @@ inline void B4aEventAction::Addenergy(G4double de){
                      
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-#endif
-
-    
+#endif 

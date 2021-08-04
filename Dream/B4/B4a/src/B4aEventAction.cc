@@ -55,7 +55,10 @@ B4aEventAction::B4aEventAction()
    PrimaryParticleEnergy(0.),
    EscapedEnergy(0.),
    VectorSignals(0.),
-   VectorSignalsCher(0.)
+   VectorSignalsCher(0.),
+   VectorDepositedEnergy(0.),
+   VectorDepositedEScin(0.),
+   VectorDepositedECher(0.)
 {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -79,30 +82,50 @@ void B4aEventAction::BeginOfEventAction(const G4Event* /*event*/)
   /*for(int i=0;i<64;i++){
     Signalfibre[i]=0;
   }*///only if you want to use SignalFibre[64]
-  for (int i=0;i<VectorSignals.size();i++){
+  /*for (int i=0;i<VectorSignals.size();i++){
+  VectorSignals.at(i)=0.;
+}
+  for (int i=0;i<VectorSignalsCher.size();i++){
+  VectorSignalsCher.at(i)=0.;
+  }*/
+for (int i=0;i<VectorSignals.size();i++){
   VectorSignals.at(i)=0.;
 }
   for (int i=0;i<VectorSignalsCher.size();i++){
   VectorSignalsCher.at(i)=0.;
   }
+for (int i=0;i<VectorDepositedEnergy.size();i++){
+  VectorDepositedEnergy.at(i)=0.;
+  }
+for (int i=0;i<VectorDepositedEScin.size();i++){
+  VectorDepositedEScin.at(i)=0.;
+  }
+for (int i=0;i<VectorDepositedECher.size();i++){
+  VectorDepositedECher.at(i)=0.;
+  }
   PrimaryParticleEnergy = 0;  
+  
   for(int i=0;i<2880;i++){
     if(VectorSignals.size() < 2880){
-  VectorSignals.push_back(0.);}}
-  //VectorSignals.at(i)=0;}
+      VectorSignals.push_back(0.);}}
   for(int k=0;k<2880;k++){
     if(VectorSignalsCher.size() < 2880){
-  VectorSignalsCher.push_back(0.);}}
-  //VectorSignalsCher[k]=0;}  
+      VectorSignalsCher.push_back(0.);}}
+  for(int k=0;k<9;k++){
+    if(VectorDepositedEnergy.size() < 9){
+      VectorDepositedEnergy.push_back(0.);}}
+  for(int k=0;k<9;k++){
+    if(VectorDepositedEScin.size() < 9){
+      VectorDepositedEScin.push_back(0.);}}
+  for(int k=0;k<9;k++){
+    if(VectorDepositedECher.size() < 9){
+      VectorDepositedECher.push_back(0.);}}
 }
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void B4aEventAction::EndOfEventAction(const G4Event* event)
 {
   // Accumulate statistics
-  //
-
   // get analysis manager
   G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
 

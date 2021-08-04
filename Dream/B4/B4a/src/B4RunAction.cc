@@ -154,6 +154,9 @@ void B4RunAction::BeginOfRunAction(const G4Run* run /*run*/)
   analysisManager->CreateNtupleDColumn("EscapedEnergy");
   //analysisManager->CreateNtupleSColumn("AbsorberMaterial");
   //analysisManager->CreateNtupleDColumn("Energyem2");
+  analysisManager->CreateNtupleDColumn("VectorDepositedEnergy",eventAction->GetVectorDepositedEnergy());
+  analysisManager->CreateNtupleDColumn("VectorDepositedEScin",eventAction->GetVectorDepositedEScin());
+  analysisManager->CreateNtupleDColumn("VectorDepositedECher",eventAction->GetVectorDepositedECher());
   analysisManager->CreateNtupleDColumn("VectorSignals",eventAction->GetVectorSignals());
   analysisManager->CreateNtupleDColumn("VectorSignalsCher",eventAction->GetVectorSignalsCher());
   analysisManager->FinishNtuple();

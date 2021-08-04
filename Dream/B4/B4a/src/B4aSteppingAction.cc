@@ -96,8 +96,23 @@ void B4aSteppingAction::UserSteppingAction(const G4Step* step)
      //Function to add up energy deposited in the whole calorimeter
      fEventAction->Addenergy(energydeposited);
   }
-
-
+//Begin - summing up energy deposited tower by tower
+  if (PreStepVolume->GetName() != "World" && PreStepVolume->GetName() != "leakageabsorber" && PreStepVolume->GetName().find("SiPM") == std::string::npos && PreStepVolume->GetName().find("Towerequipped") == std::string::npos) {
+     if( PreStepVolume->GetName() == "Tower"){
+        G4int copynumbertower = step->GetPreStepPoint()->GetTouchableHandle()->GetCopyNumber(1);
+	fEventAction->AddVectorDepositedEnergy(energydeposited, copynumbertower);
+     }else if(PreStepVolume->GetName() == "Core_S_fiber" || PreStepVolume->GetName() == "Core_C_fiber"){
+	G4int copynumbertower = step->GetPreStepPoint()->GetTouchableHandle()->GetCopyNumber(3);
+	fEventAction->AddVectorDepositedEnergy(energydeposited, copynumbertower);
+     }else if(PreStepVolume->GetName() == "Clad_S_fiber" || PreStepVolume->GetName() == "Clad_C_fiber"){
+        G4int copynumbertower = step->GetPreStepPoint()->GetTouchableHandle()->GetCopyNumber(3);
+	fEventAction->AddVectorDepositedEnergy(energydeposited, copynumbertower);
+     }else {
+        G4int copynumbertower = step->GetPreStepPoint()->GetTouchableHandle()->GetCopyNumber(2);    
+	fEventAction->AddVectorDepositedEnergy(energydeposited, copynumbertower);
+     }
+  }
+//End of - summing up energy deposited tower by tower
   if ( PreStepVolume->GetName() != "World" && PreStepVolume->GetName() != "leakageabsorber") {
     if (particlename == "e-" || particlename == "e+"){
       //Function to add up energy deposited by em component
@@ -105,19 +120,7 @@ void B4aSteppingAction::UserSteppingAction(const G4Step* step)
     }
   }
  
- 
   /* part for em2 fraction estimation
-  if (particlename == "pi0" && step->GetTrack()->GetCurrentStepNumber() == 1){
-    //if it's a neutral pion at first step
-    fEventAction->Addem2(step->GetTrack()->GetTotalEnergy());
-  }
-
-  if (particlename == "gamma" &&  step->GetTrack()->GetCreatorProcess()->GetProcessName() != "eBrem"  && step->GetTrack()->GetCreatorProcess()->GetProcessName() != "annihil"){
-      if(step->GetTrack()->GetCurrentStepNumber() == 1){
-      fEventAction->Addem2(step->GetTrack()->GetTotalEnergy());
-      //G4cout << step->GetTrack()->GetTrackID() << step->GetTrack()->GetCreatorProcess()->GetProcessName() << G4endl;
-    }
-  }
   */
 
   if ( step->GetTrack()->GetTrackID() == 1 && step->GetTrack()->GetCurrentStepNumber() == 1){
@@ -133,7 +136,7 @@ void B4aSteppingAction::UserSteppingAction(const G4Step* step)
   Fiber = PreStepVolume->GetName(); //name of current step fiber
 
   int copynumber;//copy number of fibers: from 0 to 63 by definition in detector construction
-  
+  //int copynumbertower; 
   //G4double distance; // will be the distance a photon travels before reaching a SiPM 
   //G4double pRandom,pDetection,pSurvive,pTot; // will be used as probabilities for parameterization of light
   //pRandom=G4UniformRand(); // random numeber between 0 and 1
@@ -144,11 +147,14 @@ void B4aSteppingAction::UserSteppingAction(const G4Step* step)
   //G4double costheta; // will be the angle of emission of each photon inside fibres
 
   if ( strstr(Fiber.c_str(),S_fiber.c_str())){ //it's a scintillating fiber
+	  //G4String naam1 = PreStepVolume->GetName();
+          //G4cout<<"naam1 holo: "<<naam1<<G4endl;
     //Function to add up energy depoisted in scintillating fibers:
     //- as signal saturated by Birk's law in VectorSignals
     //- as regular energy deposition in all scintillating fibers in EnergyScin
     G4double saturatedenergydeposited = 0.;
     copynumber = step->GetPreStepPoint()->GetTouchableHandle()->GetCopyNumber(1);
+    G4int copynumbertower = step->GetPreStepPoint()->GetTouchableHandle()->GetCopyNumber(3);
     if(step->GetTrack()->GetDefinition()->GetPDGCharge() != 0.){
         if (steplength != 0)
                 {
@@ -159,16 +165,21 @@ void B4aSteppingAction::UserSteppingAction(const G4Step* step)
     	        saturatedenergydeposited = 0.;
             }
       fEventAction->AddScin(energydeposited); //All energy deposited in scin fibers (not saturated)
+      //G4cout<<" cnt: "<<copynumbertower<<G4endl;
+      fEventAction->AddVectorDepositedEScin(energydeposited, copynumbertower);		//All energy deposited in S fibers tower by tower
+
       //fEventAction->AddEnergyfibre(edep, copynumber); //only if you want to use Signalfibre[64]
       std::poisson_distribution<int> scin_distribution(saturatedenergydeposited*3.78);
       int s_signal = scin_distribution(generator);
-      fEventAction->AddVectorScinEnergy(s_signal,copynumber); //energy deposited in any scintillating fiber (saturated)
-
+      //fEventAction->AddVectorScinEnergy(s_signal,copynumber); //energy deposited in any scintillating fiber (saturated)
+      fEventAction->AddVectorScinEnergy(s_signal, copynumbertower, copynumber);		//All signal (saturated E) deposited in S fibers tower by tower
   }
 
   if ( strstr(Fiber.c_str(),C_fiber.c_str())){//it's a Cherenkov fiber
     //Function to add up energy deposited in Cherenkov fibres
+    G4int copynumbertower = step->GetPreStepPoint()->GetTouchableHandle()->GetCopyNumber(3);
     fEventAction->AddCher(energydeposited);
+    fEventAction->AddVectorDepositedECher(energydeposited, copynumbertower);		//All energy deposited in C fibers tower by tower
   }
 /* //part to check things on killing neutrons
  if ( particlename == "neutron" || particlename == "anti_neutron" ) {
@@ -237,12 +248,15 @@ G4ProcessManager* OpManager =
 
             if(strstr(Fiber.c_str(), C_fiber.c_str())){ //it's a Cherenkov fibre
                copynumber = step->GetPreStepPoint()->GetTouchableHandle()->GetCopyNumber(1);
+	       G4int copynumbertower = step->GetPreStepPoint()->GetTouchableHandle()->GetCopyNumber(3);
                Prestep = step->GetPreStepPoint()->GetPosition();   
                Postsep = step->GetPostStepPoint()->GetPosition();
                Momentum = step->GetTrack()->GetMomentumDirection();
 	       int c_signal = cher_distribution(generator);
+	       //G4cout<<"c_signal: "<<c_signal<<G4endl;
                fEventAction->AddCherenkov(c_signal); // add one photoelectron from Cherenkov process in Cherenkov fibers                  
-               fEventAction->AddVectorCherPE(copynumber, c_signal);
+               //fEventAction->AddVectorCherPE(copynumber, c_signal);
+	       fEventAction->AddVectorCherPE(copynumbertower, copynumber, c_signal);		//All signal (cherenkov p.e.) deposited in C fibers tower by tower
                step->GetTrack()->SetTrackStatus(fStopAndKill); //I kille the photon just after having counted it or excluded
             }
     break;
